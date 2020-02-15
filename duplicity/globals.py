@@ -22,11 +22,12 @@
 """Store global configuration information"""
 
 import os
+import sys
 import socket
 
 
 # The current version of duplicity
-version = "0.7.13.1"
+version = "0.7.19"
 
 # Prefix for all files (appended before type-specific prefixes)
 file_prefix = ""
@@ -224,6 +225,9 @@ imap_full_address = False
 # Can be changed with a command line argument.
 imap_mailbox = "INBOX"
 
+# Sync all metadata by default
+metadata_sync_mode = "full"
+
 # Whether the old filename format is in effect.
 old_filenames = False
 
@@ -296,8 +300,12 @@ par2_options = ""
 # Whether to enable gio backend
 use_gio = False
 
-# If set, collect only the file status, not the whole root.
-file_changed = None
-
 # delay (in seconds) before next operation after failure
 backend_retry_delay = 30
+
+# default filesystem encoding
+# In Python 2 it seems that sys.getfilesystemencoding() will normally return
+# 'utf-8' or some other sane encoding, but will sometimes fail and return
+# either 'ascii' or None.  Both are bogus, so default to 'utf-8' if it does.
+fsencoding = sys.getfilesystemencoding()
+fsencoding = fsencoding if fsencoding not in ['ascii', None] else 'utf-8'

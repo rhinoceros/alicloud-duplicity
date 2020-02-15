@@ -383,7 +383,7 @@ def parse_cmdline_options(arglist):
     # --archive-dir <path>
     parser.add_option("--file-to-restore", "-r", action="callback", type="file",
                       metavar=_("path"), dest="restore_dir",
-                      callback=lambda o, s, v, p: setattr(p.values, "restore_dir", v.rstrip('/')))
+                      callback=lambda o, s, v, p: setattr(p.values, "restore_dir", v.strip('/')))
 
     # Used to confirm certain destructive operations like deleting old files.
     parser.add_option("--force", action="store_true")
@@ -490,6 +490,11 @@ def parse_cmdline_options(arglist):
                       dest="old_filenames",
                       callback=lambda o, s, v, p: (setattr(p.values, o.dest, True),
                                                    old_fn_deprecation(s)))
+
+    # Sync only required metadata
+    parser.add_option("--metadata-sync-mode",
+                      default="full",
+                      choices=("full", "partial"))
 
     # Level of Redundancy in % for Par2 files
     parser.add_option("--par2-redundancy", type="int", metavar=_("number"))
@@ -622,11 +627,6 @@ def parse_cmdline_options(arglist):
     # --num-retries <number>
     parser.add_option("--volsize", type="int", action="callback", metavar=_("number"),
                       callback=lambda o, s, v, p: setattr(p.values, "volsize", v * 1024 * 1024))
-
-    # If set, collect only the file status, not the whole root.
-    parser.add_option("--file-changed", action="callback", type="file",
-                      metavar=_("path"), dest="file_changed",
-                      callback=lambda o, s, v, p: setattr(p.values, "file_changed", v.rstrip('/')))
 
     # delay time before next try after a failure of a backend operation
     # TRANSL: Used in usage help. Example:
@@ -911,7 +911,6 @@ def usage():
   rsync://%(user)s[:%(password)s]@%(other_host)s[:%(port)s]::/%(module)s/%(some_dir)s
   rsync://%(user)s[:%(password)s]@%(other_host)s[:%(port)s]/%(relative_path)s
   rsync://%(user)s[:%(password)s]@%(other_host)s[:%(port)s]//%(absolute_path)s
-  oss://%(bucket_name)s[/%(prefix)s]
   s3://%(other_host)s[:%(port)s]/%(bucket_name)s[/%(prefix)s]
   s3+http://%(bucket_name)s[/%(prefix)s]
   scp://%(user)s[:%(password)s]@%(other_host)s[:%(port)s]/%(some_dir)s

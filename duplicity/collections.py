@@ -46,7 +46,7 @@ class BackupSet:
     """
     Backup set - the backup information produced by one session
     """
-    def __init__(self, backend):
+    def __init__(self, backend, action):
         """
         Initialize new backup set, only backend is required at first
         """
@@ -60,7 +60,7 @@ class BackupSet:
         self.end_time = None  # will be set if inc
         self.partial = False  # true if a partial backup
         self.encrypted = False  # true if an encrypted backup
-        self.files_changed = []
+        self.action = action
 
     def is_complete(self):
         """
@@ -124,10 +124,6 @@ class BackupSet:
         self.encrypted = bool(pr.encrypted)
         self.info_set = True
 
-    def set_files_changed(self):
-        mf = self.get_manifest()
-        self.files_changed = mf.get_files_changed()
-
     def set_manifest(self, remote_filename):
         """
         Add local and remote manifest filenames to backup set
@@ -136,7 +132,11 @@ class BackupSet:
                                                remote_filename)
         self.remote_manifest_name = remote_filename
 
-        for local_filename in globals.archive_dir.listdir():
+        if self.action not in ["collection-status"]:
+            local_filename_list = globals.archive_dir.listdir()
+        else:
+            local_filename_list = []
+        for local_filename in local_filename_list:
             pr = file_naming.parse(local_filename)
             if (pr and pr.manifest and pr.type == self.type and
                     pr.time == self.time and
@@ -144,8 +144,6 @@ class BackupSet:
                     pr.end_time == self.end_time):
                 self.local_manifest_path = \
                     globals.archive_dir.append(local_filename)
-
-                self.set_files_changed()
                 break
 
     def delete(self):
@@ -159,7 +157,11 @@ class BackupSet:
         except Exception:
             log.Debug(_("BackupSet.delete: missing %s") % [util.ufn(f) for f in rfn])
             pass
-        for lfn in globals.archive_dir.listdir():
+        if self.action not in ["collection-status"]:
+            local_filename_list = globals.archive_dir.listdir()
+        else:
+            local_filename_list = []
+        for lfn in local_filename_list:
             pr = file_naming.parse(lfn)
             if (pr and pr.time == self.time and
                     pr.start_time == self.start_time and
@@ -220,7 +222,8 @@ class BackupSet:
         """
         assert self.local_manifest_path
         manifest_buffer = self.local_manifest_path.get_data()
-        log.Info(_("Processing local manifest %s (%s)") % (self.local_manifest_path.name, len(manifest_buffer)))
+        log.Info(_("Processing local manifest %s (%s)") % (
+            self.local_manifest_path.name, len(manifest_buffer)))
         return manifest.Manifest().from_string(manifest_buffer)
 
     def get_remote_manifest(self):
@@ -228,18 +231,14 @@ class BackupSet:
         Return manifest by reading remote manifest on backend
         """
         assert self.remote_manifest_name
-        # Following by MDR.  Should catch if remote encrypted with
-        # public key w/o secret key
         try:
             manifest_buffer = self.backend.get_data(self.remote_manifest_name)
         except GPGError as message:
-            # TODO: We check for gpg v1 and v2 messages, should be an error code
-            if ("secret key not available" in message.args[0] or
-                    "No secret key" in message.args[0]):
-                return None
-            else:
-                raise
-        log.Info(_("Processing remote manifest %s (%s)") % (self.remote_manifest_name, len(manifest_buffer)))
+            log.Error(_("Error processing remote manifest (%s): %s") %
+                      (util.ufn(self.remote_manifest_name), util.uexc(message)))
+            return None
+        log.Info(_("Processing remote manifest %s (%s)") % (
+            util.ufn(self.remote_manifest_name), len(manifest_buffer)))
         return manifest.Manifest().from_string(manifest_buffer)
 
     def get_manifest(self):
@@ -265,7 +264,7 @@ class BackupSet:
             # when specifically asked for a list of remote filenames, we
             # should not include it.
             pr = file_naming.parse(self.remote_manifest_name)
-            if not pr or not pr.partial:
+            if pr and not pr.partial:
                 volume_filenames.append(self.remote_manifest_name)
         return volume_filenames
 
@@ -278,9 +277,6 @@ class BackupSet:
         if self.end_time:
             return self.end_time
         assert 0, "Neither self.time nor self.end_time set"
-
-    def get_files_changed(self):
-        return self.files_changed
 
     def __len__(self):
         """
@@ -582,12 +578,13 @@ class CollectionsStatus:
     """
     Hold information about available chains and sets
     """
-    def __init__(self, backend, archive_dir):
+    def __init__(self, backend, archive_dir, action):
         """
         Make new object.  Does not set values
         """
         self.backend = backend
         self.archive_dir = archive_dir
+        self.action = action
 
         # Will hold (signature chain, backup chain) pair of active
         # (most recent) chains
@@ -691,7 +688,10 @@ class CollectionsStatus:
                   len(backend_filename_list))
 
         # get local filename list
-        local_filename_list = self.archive_dir.listdir()
+        if self.action not in ["collection-status"]:
+            local_filename_list = self.archive_dir.listdir()
+        else:
+            local_filename_list = []
         log.Debug(ngettext("%d file exists in cache",
                            "%d files exist in cache",
                            len(local_filename_list)) %
@@ -826,7 +826,7 @@ class CollectionsStatus:
                     break
             else:
                 log.Debug(_("File %s is not part of a known set; creating new set") % (util.ufn(filename),))
-                new_set = BackupSet(self.backend)
+                new_set = BackupSet(self.backend, self.action)
                 if new_set.add_filename(filename):
                     sets.append(new_set)
                 else:
@@ -888,7 +888,10 @@ class CollectionsStatus:
             if filelist is not None:
                 return filelist
             elif local:
-                return self.archive_dir.listdir()
+                if self.action not in ["collection-status"]:
+                    return self.archive_dir.listdir()
+                else:
+                    return []
             else:
                 return self.backend.list()
 
@@ -1168,53 +1171,3 @@ class CollectionsStatus:
             old_sets = filter(lambda s: s.get_time() < t, chain.get_all_sets())
             result_sets.extend(old_sets)
         return self.sort_sets(result_sets)
-
-    def get_file_changed_record(self, filepath):
-        """
-        Returns time line of specified file changed
-        """
-        # quick fix to spaces in filepath
-        modified_filepath = ""
-        if " " in filepath:
-            modified_filepath = '"' + filepath.replace(" ", r"\x20") + '"'
-
-        if not self.matched_chain_pair:
-            return ""
-
-        all_backup_set = self.matched_chain_pair[1].get_all_sets()
-        specified_file_backup_set = []
-        specified_file_backup_type = []
-
-        for bs in all_backup_set:
-            filelist = [fileinfo[1] for fileinfo in bs.get_files_changed()]
-            if modified_filepath in filelist:
-                specified_file_backup_set.append(bs)
-                index = filelist.index(modified_filepath)
-                specified_file_backup_type.append(bs.get_files_changed()[index][0])
-
-        return FileChangedStatus(filepath, list(zip(specified_file_backup_type, specified_file_backup_set)))
-
-
-class FileChangedStatus:
-    def __init__(self, filepath, fileinfo_list):
-        self.filepath = filepath
-        self.fileinfo_list = fileinfo_list
-
-    def __unicode__(self):
-        set_schema = "%20s   %30s  %20s"
-        l = ["-------------------------",
-             _("File: %s") % (self.filepath),
-             _("Total number of backup: %d") % len(self.fileinfo_list),
-             set_schema % (_("Type of backup set:"), _("Time:"), _("Type of file change:"))]
-
-        for s in self.fileinfo_list:
-            backup_type = s[0]
-            backup_set = s[1]
-            if backup_set.time:
-                type = _("Full")
-            else:
-                type = _("Incremental")
-            l.append(set_schema % (type, dup_time.timetopretty(backup_set.get_time()), backup_type.title()))
-
-        l.append("-------------------------")
-        return "\n".join(l)

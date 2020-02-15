@@ -1,3 +1,266 @@
+2019-04-27  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Merged in lp:~yajo/duplicity/duplicity
+      - Support partial metadata sync.
+      - Fixes bug #1823858 by letting the user to choose partial syncing. Only the metadata for the target chain
+        will be downloaded. If older (or newer) chains are encrypted with a different passphrase, the user will
+        be able to restore to a given time by supplying only the passphrase for the chain selected by
+        the `--restore-time` option when using this new option.
+      - A side effect is that using this flag reduces dramatically the sync time when moving files from one to
+        another location, in cases where big amounts of chains are found.
+
+2019-02-25  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Merged in lp:~mterry/duplicity/pydrive-root-0.7
+      - Just a tiny fix to clean up the temporary file we create to find the root ID.
+        It's a little surprising for the user if they wind up with this file called
+        "i_am_in_root" that they don't know where it came from. Almost sounds like
+        they were hacked.
+
+2018-10-17  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1798206 and bug #1798504
+      - Made paramiko a global with import during __init__ so it would
+        not be loaded unless needed.
+
+2018-10-17  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Prep for 0.7.18.2
+
+2018-08-27  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1788558 again
+      - If we get None for size skip check.
+
+2018-08-27  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Prep for 0.7.18.1
+
+2018-08-26  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1788558
+      - Treat None as zero when printing log.
+    * Revert fix for bug #1788599.
+      - Was causing problems with directory names
+
+2018-08-21  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fix a 2to3 error in ssh_paramiko_backend.py
+    * Merged in lp:~duplicity-team/duplicity/po-updates
+    * Prep for 0.7.18
+
+2018-08-11  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1785520 with patch from Chris Hunt
+      - Fix for B2 version 1.3.4 just released
+
+2018-07-08  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1780617 Test fail when GnuPG >= 2.2.8
+      - Relevant change in GnuPG 2.2.8: https://dev.gnupg.org/T3981
+      - Added '--ignore-mdc-error' to all gpg calls made.
+
+2018-05-07  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1717935 with suggestion from strainu
+      - Use urllib.quote_plus() to properly quote pathnames passed via URL
+
+2018-05-01  Kenneth Loafman  <kenneth@loafman.com>
+
+    * More fixes for bug #1734144
+      - Number of retries is now same as globals.num_retries.
+      - Added standoff delay of 0.5 sec per attempt.
+    * Fixed bug #1764432 with patch from Robke Geenen
+      - Just join the parts together.
+
+2018-04-04  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Partial fix of bug #1734144 with patch from Joris van Eijden
+      - Note: this is really just a partial fix for now, since it only covers
+        the case where the local size does not yet match the remote size.  A
+        case where -1 is the returned length is not fixed.
+
+2018-03-17  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1756550 Online html man page is showing a 0 byte file
+
+2018-02-26  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fix update of Launchpad Translations.  Translations were not being picked
+      up on a daily basis and we got several months behind.
+    * Prep for 0.7.17
+
+2018-02-01  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Removed changes made in bug #1044715 Provide a file history feature
+      - Changes required too much memory to carry in the manifest
+      - The option --file-changed in collection-status is now invalid
+      - This will close bugs: #1730451, #896728, #1526557, #1550176
+      - Starting a full backup will be needed to fully utilize this fix
+
+2018-01-12  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fix pylint error in webdavbackend.py
+    * Prep for 0.7.16
+
+2017-11-28  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Patched in lp:~crosser/duplicity/fix-small-file-upload
+      - Fixed small file upload changes made in Dropbox SDK v7.1
+
+2017-11-25  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Patched in lp:~crosser/duplicity/fix-oauth-flow
+      - Fixed bug #1638236 "BackendException with oauth2client 4.0.0"
+    * Patched in lp:~crosser/duplicity/dpbx-fix-file-listing
+      - Fixed bug #1639664 "Dropbox support needs to be updated for Dropbox SDK v7.1"
+
+2017-11-23  Kenneth Loafman  <kenneth@loafman.com>
+
+    * More fixes for Unicode handling
+      - Default to 'utf-8' if sys.getfilesystemencoding() returns 'ascii' or None
+      - Fixed bug #1386373 with suggestion from Eugene Morozov
+
+2017-11-18  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1733057 AttributeError: 'GPGError' object has no attribute 'decode'
+      - Replaced call to util.ufn() with call to util.uexc().  Stupid typo!
+
+2017-11-09  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Prep for 0.7.15
+
+2017-11-09  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1730902 GPG Error Handling
+      - use util.ufn() not str() to handle encoding
+
+2017-11-01  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1723890 with patch from Killian Lackhove
+      - Fixes error handling in pydrivebackend.py
+
+2017-10-31  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1720159 - Cannot allocate memory with large manifest file since 0.7.03
+      - filelist is not read if --file-changed option in collection-status not present
+      - This will keep memory usage lower in non collection-status operations
+
+2017-10-26  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1448094 with patch from Tomáš Zvala
+      - Don't log incremental deletes for chains that have no incrementals
+    * Fixed bug #1724144 "--gpg-options unused with some commands"
+      - Add --gpg-options to get version run command
+
+2017-10-16  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1654756 with new b2backend.py module from Vincent Rouille
+      - Faster (big files are uploaded in chunks)
+      - Added upload progress reporting support
+
+2017-10-12  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Merged in lp:~mterry/duplicity/rename-dep
+      - Make rename command a dependency for LP build
+
+2017-09-22  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1714663 "Volume signed by XXXXXXXXXXXXXXXX, not XXXXXXXX"
+      - Normalized comparison length to min length of compared keys before comparison
+      - Avoids comparing mix of short, long, or fingerprint size keys.
+
+2017-09-13  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1715650 with patch from Mattheww S
+      - Fix to make duplicity attempt a get first, then create, a container
+        in order to support container ACLs.
+
+2017-09-07  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Merged in lp:~mterry/duplicity/more-decode-issues
+      - Here's some fixes for another couple UnicodeDecodeErrors.
+      - The duplicity/dup_time.py fixes when a user passes a utf8 date string (or a string with bogus
+        utf8 characters, but they have to really try to do that). This is bug 1334436.
+      - The bin/duplicity change from str(e) to util.uexc(e) fixes bug 1324188.
+      - The rest of the changes (util.exception_traceback and bin/duplicity changes to use it) are to
+        make the printing of exceptions prettier. Without this, if you see a French exception, you see
+        "accept\xe9es" instead of "acceptées".
+      - You can test all of these changes in one simple line:
+        $ LANGUAGE=fr duplicity remove-older-than $'accept\xffées'
+    * Fix backend.py to allow string, list, and tuple types to support megabackend.py.
+
+2017-09-06  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug introduced in new megabackend.py where process_commandline()
+      takes a string not a list.  Now it takes both.
+    * Updated web page for new megabackend requirements.
+
+2017-08-31  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1538333 Assertion error in manifest.py: assert filecount == ...
+      - Made sure to never pass .part files as true manifest files
+      - Changed assert to log.Error to warn about truncated/corrupt filelist
+      - Added unit test to make sure detection works
+      - Note: while this condition is serious, it will not affect the basic backup and restore
+        functions.  Interactive options like --list-files-changed and --file-changed will not
+        work correctly for this backup set, so it is advised to run a full backup as soon as
+        possible after this error occurs.
+    * Fixed bug #1638033 Remove leading slash on --file-to-restore
+      - code already used rstrip('/') so change to just strip('/')
+    * Prep for 0.7.14
+
+2017-08-29  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1394386 with new module megabackend.py from Tomas Vondra
+      - uses megatools from https://megatools.megous.com/ instead of mega.py library
+        which has been deprecated
+      - fixed copyright and PEP8 issues
+      - replaced subprocess.call() with self.subprocess_popen() to standardize
+    * Fixed bug #1713640 with patch from Aleksandar Ivanisevic
+      - replace 2.7 syntax with 2.6 equivalent
+
+2017-08-28  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1711905 with suggestion from Schneider
+      - log.Warn was invoked with log.warn in webdavbackend.py
+    * Merged in lp:~mterry/duplicity/gpg-tag-versions
+      - Support gpg versions numbers that have tags on them.
+      - This can happen if you build gpg from git trunk (e.g. 2.1.15-beta20). Or if you run
+        against the freedesktop flatpak runtime (e.g. 2.1.14-unknown).
+
+2017-08-15  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed bug #1709047 with suggestion from Gary Hasson
+      - fixed so default was to use original filename
+    * Fixed PEP8 errors in bin/duplicity
+    * Merged in lp:~mterry/duplicity/gio_child_for_display_name_0.7
+      - gio: be slightly more correct and get child GFiles based on display name
+
+2017-08-06  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Patched in lp:~mterry/duplicity/giobackend-display-name
+      - giobackend: handle a wider variety of gio backends by making less assumptions;
+        in particular, this fixes the google-drive: backend
+
+2017-07-20  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed encrypted remote manifest handling to merely put out a non-fatal
+      error message and continue if the private key is not available.
+
+2017-07-18  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Fixed slowness in 'collection-status' by basing the status on the
+      remote system only.  The local cache is treated as empty.
+
+2017-07-11  Kenneth Loafman  <kenneth@loafman.com>
+
+    * Merged in lp:~dawgfoto/duplicity/skip_sync_collection_status
+      - collection-status should not sync metadata
+      - up-to-date local metadata is not needed as collection-status is
+        generated from remote file list
+      - syncing metadata might require to download several GBs
+
 2017-06-18  Kenneth Loafman  <kenneth@loafman.com>
 
     * Fixed problem in dist/makedist when building on Mac where AppleDouble

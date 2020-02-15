@@ -28,7 +28,7 @@ from setuptools.command.install import install
 from setuptools.command.sdist import sdist
 from distutils.command.build_scripts import build_scripts
 
-version_string = "0.7.14"
+version_string = "0.7.19"
 
 if sys.version_info[:2] < (2, 6) or sys.version_info[:2] > (2, 7):
     print("Sorry, duplicity requires version 2.6 or 2.7 of python.")

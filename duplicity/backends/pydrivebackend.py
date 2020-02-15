@@ -92,6 +92,7 @@ Exception: %s""" % str(e))
             file_in_root = self.drive.CreateFile({'title': 'i_am_in_root'})
             file_in_root.Upload()
             parent_folder_id = file_in_root['parents'][0]['id']
+            file_in_root.Delete()
 
         # Fetch destination folder entry and create hierarchy if required.
         folder_names = string.split(parsed_url.path, '/')
@@ -211,11 +212,7 @@ Exception: %s""" % str(e))
         if isinstance(error, FileNotUploadedError):
             return log.ErrorCode.backend_not_found
         elif isinstance(error, ApiRequestError):
-            http_status = error.args[0].resp.status
-            if http_status == 404:
-                return log.ErrorCode.backend_not_found
-            elif http_status == 403:
-                return log.ErrorCode.backend_permission_denied
+            return log.ErrorCode.backend_permission_denied
         return log.ErrorCode.backend_error
 
 duplicity.backend.register_backend('pydrive', PyDriveBackend)

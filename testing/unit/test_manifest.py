@@ -19,11 +19,16 @@
 # along with duplicity; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
+from StringIO import StringIO
+import re
+import sys
 import types
 import unittest
 
+from duplicity import globals
 from duplicity import manifest
 from duplicity import path
+
 from . import UnitTestCase
 
 
@@ -76,6 +81,10 @@ class VolumeInfoTest(UnitTestCase):
 
 class ManifestTest(UnitTestCase):
     """Test Manifest class"""
+
+    def setUp(self):
+        UnitTestCase.setUp(self)
+
     def test_basic(self):
         vi1 = manifest.VolumeInfo()
         vi1.set_info(3, ("hello",), None, (), None)
@@ -89,16 +98,13 @@ class ManifestTest(UnitTestCase):
 
         self.set_global('local_path', path.Path("Foobar"))
         m.set_dirinfo()
-        m.set_files_changed_info([])
 
         s = m.to_string()
-        # print "---------\n%s\n---------" % s
         assert s.lower().startswith("hostname")
         assert s.endswith("\n")
 
         m2 = manifest.Manifest().from_string(s)
         assert m == m2
-
 
 if __name__ == "__main__":
     unittest.main()

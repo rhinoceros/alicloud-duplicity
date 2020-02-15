@@ -1,4 +1,4 @@
-.TH DUPLICITY 1 "June 18, 2017" "Version 0.7.13.1" "User Manuals" \"  -*- nroff -*-
+.TH DUPLICITY 1 "April 29, 2019" "Version 0.7.19" "User Manuals" \"  -*- nroff -*-
 .\" disable justification (adjust text to left margin only)
 .\" command line examples stay readable through that
 .ad l
@@ -21,7 +21,7 @@ source_directory target_url
 source_url target_directory
 
 .B duplicity collection-status
-.I [options] [--file-changed <relpath>]
+.I [options]
 target_url
 
 .B duplicity list-current-files
@@ -180,7 +180,7 @@ The
 option enables data comparison (see below).
 
 .TP
-.BI "collection-status " "[--file-changed <relpath>]" "<url>"
+.BI "collection-status " "<url>"
 Summarize the status of the backup repository by printing the chains
 and sets found, and the number of volumes in each.
 
@@ -435,15 +435,6 @@ use --extra-clean unless you know what you're doing.
 See the
 .B cleanup
 argument for more information.
-
-.TP
-.BI "--file-changed " path
-This option may be given in collection-status mode, causing only
-.I path
-status to be collect instead of the entire contents of the backup archive.
-.I path
-should be given relative to the root of the directory backed up.
-
 
 .TP
 .BI "--file-prefix, --file-prefix-manifest, --file-prefix-archive, --file-prefix-signature
@@ -891,6 +882,14 @@ See also
 .BR "A NOTE ON SSL CERTIFICATE VERIFICATION" .
 
 .TP
+.BI "--metadata-sync-mode " mode
+This option defaults to 'full', but you can set it to 'partial'
+to avoid syncing metadata for backup chains that you are not going to use.
+This saves time when restoring for the first time, and lets you restore an
+old backup that was encrypted with a different passphrase by supplying only
+the target passphrase.
+
+.TP
 .BI "--tempdir " directory
 Use this existing directory for duplicity temporary files instead of
 the system default, which is usually the /tmp directory. This option
@@ -1051,12 +1050,6 @@ cf+http://container_name
 .PP
 See also
 .B "A NOTE ON CLOUD FILES ACCESS"
-.RE
-.PP
-.B "Copy cloud storage"
-.PP
-.RS
-copy://user[:password]@copy.com/some_dir
 .RE
 .PP
 .B Dropbox
@@ -2137,8 +2130,8 @@ see pydrive backend
 - http://lftp.yar.ru/
 .TP
 .BR "mega backend" " (mega.co.nz)"
-.B Python library for mega API
-- https://github.com/ckornacker/mega.py, ubuntu ppa - ppa:ckornacker/backup
+.B megatools client
+- https://github.com/megous/megatools
 .TP
 .BR "multi backend"
 .B Multi -- store to more than one backend

@@ -37,6 +37,9 @@ from duplicity import globals
 from duplicity import log
 from duplicity.errors import BackendException
 
+global paramiko
+
+
 read_blocksize = 65635  # for doing scp retrievals, where we need to read ourselves
 
 
@@ -61,6 +64,8 @@ class SSHParamikoBackend(duplicity.backend.Backend):
     This problem does not exist with sftp.
     """
     def __init__(self, parsed_url):
+        global paramiko
+
         duplicity.backend.Backend.__init__(self, parsed_url)
 
         self.retry_delay = 10
@@ -90,7 +95,7 @@ class SSHParamikoBackend(duplicity.backend.Backend):
             """
             def missing_host_key(self, client, hostname, key):
                 fp = hexlify(key.get_fingerprint())
-                fingerprint = ':'.join(a + b for a, b in zip(fp[::2], fp[1::2]))
+                fingerprint = ':'.join(a + b for a, b in list(zip(fp[::2], fp[1::2])))
                 question = """The authenticity of host '%s' can't be established.
 %s key fingerprint is %s.
 Are you sure you want to continue connecting (yes/no)? """ % (hostname,
